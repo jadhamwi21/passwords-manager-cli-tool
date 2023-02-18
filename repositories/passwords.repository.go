@@ -10,17 +10,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type IPasswordsRepository interface {
+type i_passwords_repository interface {
 	AddPassword(id string, password string)
 	UpdatePassword(id string, password string)
 	RemovePassword(id string)
 }
 
-type PasswordsRepository struct {
+type passwords_repository struct {
 	passwordsPath string
 }
 
-func (passwordsRepository PasswordsRepository) AddPassword(id string, password string) {
+func (passwordsRepository passwords_repository) AddPassword(id string, password string) {
 	passwordFilePath := fmt.Sprintf("%v/%v.txt", passwordsRepository.passwordsPath, id)
 	encryptedPassword, encryptPasswordError := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if encryptPasswordError != nil {
@@ -35,7 +35,7 @@ func (passwordsRepository PasswordsRepository) AddPassword(id string, password s
 	}
 }
 
-func (passwordsRepository PasswordsRepository) UpdatePassword(id string, password string) {
+func (passwordsRepository passwords_repository) UpdatePassword(id string, password string) {
 	passwordFilePath := fmt.Sprintf("%v/%v.txt", passwordsRepository.passwordsPath, id)
 	encryptedPassword, encryptPasswordError := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if encryptPasswordError != nil {
@@ -50,7 +50,7 @@ func (passwordsRepository PasswordsRepository) UpdatePassword(id string, passwor
 	}
 }
 
-func (passwordsRepository PasswordsRepository) RemovePassword(id string) {
+func (passwordsRepository passwords_repository) RemovePassword(id string) {
 	passwordFilePath := fmt.Sprintf("%v/%v.txt", passwordsRepository.passwordsPath, id)
 	_, err := os.Stat(passwordFilePath)
 	if errors.Is(err, os.ErrNotExist) {
@@ -63,7 +63,7 @@ func (passwordsRepository PasswordsRepository) RemovePassword(id string) {
 	}
 }
 
-func NewPasswordsRepository() IPasswordsRepository {
+func newPasswordsRepository() i_passwords_repository {
 
 	workingDir, err := os.Getwd()
 	if err != nil {
@@ -78,7 +78,9 @@ func NewPasswordsRepository() IPasswordsRepository {
 		os.Mkdir(passwordsDirectoryPath, os.ModePerm)
 	}
 
-	return &PasswordsRepository{
+	return &passwords_repository{
 		passwordsPath: passwordsDirectoryPath,
 	}
 }
+
+var PasswordsRepository i_passwords_repository = newPasswordsRepository()

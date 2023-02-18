@@ -5,13 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var passwordsRepo repositories.IPasswordsRepository
-
 var PASSWORD_ID string
 var PASSWORD_VALUE string
 
 func init() {
-	passwordsRepo = repositories.NewPasswordsRepository()
 	addCommand.Flags().StringVar(&PASSWORD_ID, "id", "", "PASSWORD ID")
 	addCommand.Flags().StringVar(&PASSWORD_VALUE, "password", "", "PASSWORD VALUE")
 	addCommand.MarkFlagRequired("id")
@@ -32,21 +29,21 @@ var addCommand = &cobra.Command{
 	Use:   "add",
 	Short: "add a new password with an id",
 	Run: func(cmd *cobra.Command, args []string) {
-		passwordsRepo.AddPassword(PASSWORD_ID, PASSWORD_VALUE)
+		repositories.PasswordsRepository.AddPassword(PASSWORD_ID, PASSWORD_VALUE)
 	},
 }
 var removeCommand = &cobra.Command{
 	Use:   "remove",
 	Short: "remove a password by id",
 	Run: func(cmd *cobra.Command, args []string) {
-		passwordsRepo.RemovePassword(PASSWORD_ID)
+		repositories.PasswordsRepository.RemovePassword(PASSWORD_ID)
 	},
 }
 var updateCommand = &cobra.Command{
 	Use:   "update",
 	Short: "update a password by id",
 	Run: func(cmd *cobra.Command, args []string) {
-		passwordsRepo.UpdatePassword(PASSWORD_ID, PASSWORD_VALUE)
+		repositories.PasswordsRepository.UpdatePassword(PASSWORD_ID, PASSWORD_VALUE)
 	},
 }
 
