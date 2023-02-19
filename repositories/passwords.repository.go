@@ -3,17 +3,19 @@ package repositories
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 type i_passwords_repository interface {
 	AddPassword(id string, password string)
 	UpdatePassword(id string, password string)
 	RemovePassword(id string)
+	RetrieveAllPasswords()
+	RetrievePasswordById(id string)
 }
 
 type passwords_repository struct {
@@ -22,14 +24,10 @@ type passwords_repository struct {
 
 func (passwordsRepository passwords_repository) AddPassword(id string, password string) {
 	passwordFilePath := fmt.Sprintf("%v/%v.txt", passwordsRepository.passwordsPath, id)
-	encryptedPassword, encryptPasswordError := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if encryptPasswordError != nil {
-		log.Fatal(encryptPasswordError)
-	}
 	_, err := os.Stat(passwordFilePath)
 	if errors.Is(err, os.ErrNotExist) {
 		newPasswordFile, _ := os.OpenFile(passwordFilePath, os.O_CREATE, 0664)
-		newPasswordFile.WriteString(string(encryptedPassword))
+		newPasswordFile.WriteString(password)
 	} else {
 		log.Fatal("password with this id already exists")
 	}
@@ -37,16 +35,12 @@ func (passwordsRepository passwords_repository) AddPassword(id string, password 
 
 func (passwordsRepository passwords_repository) UpdatePassword(id string, password string) {
 	passwordFilePath := fmt.Sprintf("%v/%v.txt", passwordsRepository.passwordsPath, id)
-	encryptedPassword, encryptPasswordError := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if encryptPasswordError != nil {
-		log.Fatal(encryptPasswordError)
-	}
 	_, err := os.Stat(passwordFilePath)
 	if errors.Is(err, os.ErrNotExist) {
 		log.Fatal("password with this id already exists")
 	} else {
 		passwordFile, _ := os.OpenFile(passwordFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-		passwordFile.WriteString(string(encryptedPassword))
+		passwordFile.WriteString(password)
 	}
 }
 
@@ -61,6 +55,38 @@ func (passwordsRepository passwords_repository) RemovePassword(id string) {
 			log.Fatal("error deleting this password")
 		}
 	}
+}
+
+func (passwordsRepository passwords_repository) RetrieveAllPasswords() {
+	files, err := ioutil.ReadDir(passwordsRepository.passwordsPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(files) == 0 {
+		log.Fatal("passwords directory is empty")
+	}
+	passwordsMap := make(map[string]string)
+	for _, file := range files {
+		passwordFileNameSplitted := strings.Split(file.Name(), ".")
+		PASSWORD_ID := passwordFileNameSplitted[0]
+		PASSWORD_VALUE, err := os.ReadFile(filepath.Clean(filepath.Join(passwordsRepository.passwordsPath, "/", file.Name())))
+		if err != nil {
+			log.Fatal(err)
+		}
+		passwordsMap[PASSWORD_ID] = string(PASSWORD_VALUE)
+	}
+	for password_id, password_value := range passwordsMap {
+		fmt.Printf("%v : %v\n", password_id, password_value)
+	}
+}
+
+func (passwordsRepository passwords_repository) RetrievePasswordById(id string) {
+
+	PASSWORD_VALUE, err := os.ReadFile(filepath.Clean(filepath.Join(passwordsRepository.passwordsPath, fmt.Sprintf("%v.txt", id))))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(PASSWORD_VALUE))
 }
 
 func newPasswordsRepository() i_passwords_repository {
