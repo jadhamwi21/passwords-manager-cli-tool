@@ -29,7 +29,7 @@ func (passwordsRepository passwords_repository) AddPassword(id string, password 
 	_, err := os.Stat(passwordFilePath)
 	if errors.Is(err, os.ErrNotExist) {
 		newPasswordFile, _ := os.OpenFile(passwordFilePath, os.O_CREATE, 0664)
-		newPasswordFile.WriteString(services.EncryptionService.Encrypt(password))
+		newPasswordFile.WriteString(services.CipherService.Encrypt(password))
 	} else {
 		log.Fatal("password with this id already exists")
 	}
@@ -42,7 +42,7 @@ func (passwordsRepository passwords_repository) UpdatePassword(id string, passwo
 		log.Fatal("password with this id already exists")
 	} else {
 		passwordFile, _ := os.OpenFile(passwordFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-		passwordFile.WriteString(services.EncryptionService.Encrypt(password))
+		passwordFile.WriteString(services.CipherService.Encrypt(password))
 	}
 }
 
@@ -75,7 +75,7 @@ func (passwordsRepository passwords_repository) RetrieveAllPasswords() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		passwordsMap[PASSWORD_ID] = string(services.EncryptionService.Decrypt(string(PASSWORD_VALUE)))
+		passwordsMap[PASSWORD_ID] = string(services.CipherService.Decrypt(string(PASSWORD_VALUE)))
 	}
 	for password_id, password_value := range passwordsMap {
 		fmt.Printf("%v : %v\n", password_id, password_value)
@@ -88,7 +88,7 @@ func (passwordsRepository passwords_repository) RetrievePasswordById(id string) 
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(services.EncryptionService.Decrypt(string(PASSWORD_VALUE))))
+	fmt.Println(string(services.CipherService.Decrypt(string(PASSWORD_VALUE))))
 }
 
 func newPasswordsRepository() i_passwords_repository {
